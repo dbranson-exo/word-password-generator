@@ -10,9 +10,10 @@ class PasswordGenerator {
    * Generate a random password using common words
    * @param {number} wordCount - Number of words to use (3 or 4)
    * @param {Object} options - Additional options
-   * @param {boolean} options.capitalize - Whether to capitalize first letter of each word
-   * @param {boolean} options.numbers - Whether to add numbers between words
-   * @param {boolean} options.symbols - Whether to add symbols between words
+   * @param {boolean} options.capitalize - Whether to capitalize first letter of every word
+   * @param {boolean} options.capitalizeFirst - Whether to capitalize only the first word
+   * @param {number} options.numberCount - How many random digits to append (0-9)
+   * @param {number} options.symbolCount - How many random symbols to append (0-9)
    * @param {string} options.separator - Character to separate words
    * @returns {string} Generated password
    */
@@ -23,8 +24,9 @@ class PasswordGenerator {
 
     const {
       capitalize = false,
-      numbers = false,
-      symbols = false,
+      capitalizeFirst = false,
+      numberCount = 0,
+      symbolCount = 0,
       separator = ''
     } = options;
 
@@ -37,37 +39,29 @@ class PasswordGenerator {
       if (!usedIndices.has(randomIndex)) {
         usedIndices.add(randomIndex);
         let word = this.words[randomIndex];
-        
-        if (capitalize) {
+        const isFirst = selectedWords.length === 0;
+
+        if (capitalize || (capitalizeFirst && isFirst)) {
           word = word.charAt(0).toUpperCase() + word.slice(1);
         }
-        
+
         selectedWords.push(word);
       }
     }
 
-    // Build password with separators
-    let password = '';
-    for (let i = 0; i < selectedWords.length; i++) {
-      password += selectedWords[i];
-      
-      // Add separator if not last word
-      if (i < selectedWords.length - 1) {
-        if (numbers && symbols) {
-          // Alternate between numbers and symbols
-          const useNumber = i % 2 === 0;
-          password += useNumber ? this.getRandomNumber() : this.getRandomSymbol();
-        } else if (numbers) {
-          password += this.getRandomNumber();
-        } else if (symbols) {
-          password += this.getRandomSymbol();
-        } else {
-          password += separator;
-        }
-      }
+    // Join words with separator
+    let password = selectedWords.join(separator);
+
+    // Build suffix: shuffled mix of requested numbers and symbols
+    const extras = [];
+    for (let i = 0; i < numberCount; i++) extras.push(this.getRandomNumber());
+    for (let i = 0; i < symbolCount; i++) extras.push(this.getRandomSymbol());
+    for (let i = extras.length - 1; i > 0; i--) {
+      const j = crypto.randomInt(i + 1);
+      [extras[i], extras[j]] = [extras[j], extras[i]];
     }
 
-    return password;
+    return password + extras.join('');
   }
 
   /**

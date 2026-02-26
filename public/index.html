@@ -42,19 +42,45 @@
                 </div>
 
                 <div class="option-group">
+                    <label>Capitalization</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="capitalize" value="none" id="capNone" checked>
+                            <span>None</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="capitalize" value="first" id="capFirst">
+                            <span>First Word</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="capitalize" value="all" id="capAll">
+                            <span>All Words</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label for="numberCount">Digits to append</label>
+                    <select id="numberCount">
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label for="symbolCount">Symbols to append</label>
+                    <select id="symbolCount">
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
                     <div class="checkbox-group">
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="capitalize">
-                            <span>Capitalize Words</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="numbers">
-                            <span>Add Numbers</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="symbols">
-                            <span>Add Symbols</span>
-                        </label>
                         <label class="checkbox-option">
                             <input type="checkbox" id="showEntropy">
                             <span>Show Entropy</span>

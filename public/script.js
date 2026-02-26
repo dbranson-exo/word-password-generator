@@ -583,9 +583,11 @@ class PasswordGUI {
       wordCount4: document.getElementById('words4'),
       passwordCount: document.getElementById('passwordCount'),
       separator: document.getElementById('separator'),
-      capitalize: document.getElementById('capitalize'),
-      numbers: document.getElementById('numbers'),
-      symbols: document.getElementById('symbols'),
+      capNone: document.getElementById('capNone'),
+      capFirst: document.getElementById('capFirst'),
+      capAll: document.getElementById('capAll'),
+      numberCount: document.getElementById('numberCount'),
+      symbolCount: document.getElementById('symbolCount'),
       showEntropy: document.getElementById('showEntropy'),
       generateBtn: document.getElementById('generateBtn'),
       passwordsContainer: document.getElementById('passwordsContainer'),
@@ -613,13 +615,18 @@ class PasswordGUI {
   }
 
   getOptions() {
+    const capValue = this.elements.capFirst.checked ? 'first'
+      : this.elements.capAll.checked ? 'all'
+      : 'none';
+
     return {
       wordCount: parseInt(this.elements.wordCount4.checked ? '4' : '3'),
       count: parseInt(this.elements.passwordCount.value),
       separator: this.elements.separator.value,
-      capitalize: this.elements.capitalize.checked,
-      numbers: this.elements.numbers.checked,
-      symbols: this.elements.symbols.checked,
+      capitalize: capValue === 'all',
+      capitalizeFirst: capValue === 'first',
+      numberCount: parseInt(this.elements.numberCount.value),
+      symbolCount: parseInt(this.elements.symbolCount.value),
       showEntropy: this.elements.showEntropy.checked
     };
   }
@@ -639,8 +646,9 @@ class PasswordGUI {
         options.wordCount,
         {
           capitalize: options.capitalize,
-          numbers: options.numbers,
-          symbols: options.symbols,
+          capitalizeFirst: options.capitalizeFirst,
+          numberCount: options.numberCount,
+          symbolCount: options.symbolCount,
           separator: options.separator
         }
       );

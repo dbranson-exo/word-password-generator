@@ -10,20 +10,22 @@ Usage:
   node index.js [options]
 
 Options:
-  -w, --words <count>     Number of words to use (3 or 4, default: 4)
-  -c, --count <number>    Number of passwords to generate (default: 1)
-  -s, --separator <char>  Separator between words (default: none)
-  --capitalize           Capitalize first letter of each word
-  --numbers              Add numbers between words
-  --symbols              Add symbols between words
-  --entropy              Show entropy information
-  -h, --help             Show this help message
+  -w, --words <count>          Number of words to use (3 or 4, default: 4)
+  -c, --count <number>         Number of passwords to generate (default: 1)
+  -s, --separator <char>       Separator between words (default: none)
+  --capitalize                 Capitalize first letter of every word
+  --capitalize-first           Capitalize first letter of the first word only
+  --numbers <count>            Number of digits to append (default: 0)
+  --symbols <count>            Number of symbols to append (default: 0)
+  --entropy                    Show entropy information
+  -h, --help                   Show this help message
 
 Examples:
-  node index.js                                    # Generate 1 password with 4 words
-  node index.js -w 3 -c 5                          # Generate 5 passwords with 3 words each
-  node index.js --capitalize --separator "-"       # Generate with capitalization and hyphens
-  node index.js --numbers --symbols --entropy      # Generate with numbers/symbols and show entropy
+  node index.js                                         # Generate 1 password with 4 words
+  node index.js -w 3 -c 5                               # Generate 5 passwords with 3 words each
+  node index.js --capitalize-first --separator "-"      # Capitalize first word, use hyphens
+  node index.js --numbers 2 --symbols 1 --entropy       # Append 2 digits + 1 symbol, show entropy
+  node index.js --capitalize --numbers 3 --symbols 2    # All caps + 3 digits + 2 symbols
 `);
 }
 
@@ -34,8 +36,9 @@ function parseArgs() {
     count: 1,
     separator: '',
     capitalize: false,
-    numbers: false,
-    symbols: false,
+    capitalizeFirst: false,
+    numberCount: 0,
+    symbolCount: 0,
     entropy: false
   };
 
@@ -79,14 +82,30 @@ function parseArgs() {
       case '--capitalize':
         options.capitalize = true;
         break;
-        
-      case '--numbers':
-        options.numbers = true;
+
+      case '--capitalize-first':
+        options.capitalizeFirst = true;
         break;
-        
-      case '--symbols':
-        options.symbols = true;
+
+      case '--numbers': {
+        const numberCount = parseInt(args[++i]);
+        if (isNaN(numberCount) || numberCount < 0) {
+          console.error('Error: --numbers count must be a non-negative integer');
+          process.exit(1);
+        }
+        options.numberCount = numberCount;
         break;
+      }
+
+      case '--symbols': {
+        const symbolCount = parseInt(args[++i]);
+        if (isNaN(symbolCount) || symbolCount < 0) {
+          console.error('Error: --symbols count must be a non-negative integer');
+          process.exit(1);
+        }
+        options.symbolCount = symbolCount;
+        break;
+      }
         
       case '--entropy':
         options.entropy = true;
@@ -112,8 +131,9 @@ function main() {
       options.wordCount,
       {
         capitalize: options.capitalize,
-        numbers: options.numbers,
-        symbols: options.symbols,
+        capitalizeFirst: options.capitalizeFirst,
+        numberCount: options.numberCount,
+        symbolCount: options.symbolCount,
         separator: options.separator
       }
     );
