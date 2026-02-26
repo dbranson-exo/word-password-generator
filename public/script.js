@@ -487,8 +487,9 @@ class PasswordGenerator {
 
     const {
       capitalize = false,
-      numbers = false,
-      symbols = false,
+      capitalizeFirst = false,
+      numberCount = 0,
+      symbolCount = 0,
       separator = ''
     } = options;
 
@@ -500,34 +501,29 @@ class PasswordGenerator {
       if (!usedIndices.has(randomIndex)) {
         usedIndices.add(randomIndex);
         let word = this.words[randomIndex];
-        
-        if (capitalize) {
+        const isFirst = selectedWords.length === 0;
+
+        if (capitalize || (capitalizeFirst && isFirst)) {
           word = word.charAt(0).toUpperCase() + word.slice(1);
         }
-        
+
         selectedWords.push(word);
       }
     }
 
-    let password = '';
-    for (let i = 0; i < selectedWords.length; i++) {
-      password += selectedWords[i];
-      
-      if (i < selectedWords.length - 1) {
-        if (numbers && symbols) {
-          const useNumber = i % 2 === 0;
-          password += useNumber ? this.getRandomNumber() : this.getRandomSymbol();
-        } else if (numbers) {
-          password += this.getRandomNumber();
-        } else if (symbols) {
-          password += this.getRandomSymbol();
-        } else {
-          password += separator;
-        }
-      }
+    // Join words with separator
+    let password = selectedWords.join(separator);
+
+    // Build suffix: shuffled mix of requested numbers and symbols
+    const extras = [];
+    for (let i = 0; i < numberCount; i++) extras.push(this.getRandomNumber());
+    for (let i = 0; i < symbolCount; i++) extras.push(this.getRandomSymbol());
+    for (let i = extras.length - 1; i > 0; i--) {
+      const j = this.getRandomInt(i + 1);
+      [extras[i], extras[j]] = [extras[j], extras[i]];
     }
 
-    return password;
+    return password + extras.join('');
   }
 
   generateMultiple(count, wordCount = 4, options = {}) {
