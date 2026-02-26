@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Password Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Word Password Generator</h1>
+            <p>Create strong, memorable passwords using common words</p>
+        </header>
+
+        <main>
+            <section class="options-panel">
+                <h2>Generator Options</h2>
+                
+                <div class="option-group">
+                    <label for="wordCount">Number of Words</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="wordCount" value="3" id="words3">
+                            <span>3 Words</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="wordCount" value="4" id="words4" checked>
+                            <span>4 Words</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label for="passwordCount">Number of Passwords</label>
+                    <input type="number" id="passwordCount" min="1" max="20" value="1">
+                </div>
+
+                <div class="option-group">
+                    <label for="separator">Separator</label>
+                    <input type="text" id="separator" placeholder="Leave empty for no separator" maxlength="1">
+                </div>
+
+                <div class="option-group">
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="capitalize">
+                            <span>Capitalize Words</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="numbers">
+                            <span>Add Numbers</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="symbols">
+                            <span>Add Symbols</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="showEntropy">
+                            <span>Show Entropy</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="generateBtn" class="generate-btn">
+                    <span>🎲</span> Generate Passwords
+                </button>
+            </section>
+
+            <section class="results-panel">
+                <h2>Generated Passwords</h2>
+                <div id="passwordsContainer" class="passwords-container">
+                    <div class="placeholder">
+                        <p>Click "Generate Passwords" to create your secure passwords</p>
+                    </div>
+                </div>
+                
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Generated:</span>
+                        <span class="stat-value" id="totalCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Length:</span>
+                        <span class="stat-value" id="avgLength">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Entropy:</span>
+                        <span class="stat-value" id="avgEntropy">0 bits</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>💡 Tip: Longer passwords with more words are more secure</p>
+                <div class="footer-links">
+                    <button id="copyAllBtn" class="copy-btn" style="display: none;">📋 Copy All</button>
+                    <button id="clearBtn" class="clear-btn" style="display: none;">🗑️ Clear</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
