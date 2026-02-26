@@ -600,6 +600,7 @@ class PasswordGUI {
       posBetween: document.getElementById('posBetween'),
       showEntropy: document.getElementById('showEntropy'),
       generateBtn: document.getElementById('generateBtn'),
+      generateBtnBottom: document.getElementById('generateBtnBottom'),
       passwordsContainer: document.getElementById('passwordsContainer'),
       stats: document.getElementById('stats'),
       totalCount: document.getElementById('totalCount'),
@@ -612,6 +613,7 @@ class PasswordGUI {
 
   attachEventListeners() {
     this.elements.generateBtn.addEventListener('click', () => this.generatePasswords());
+    this.elements.generateBtnBottom.addEventListener('click', () => this.generatePasswords());
     this.elements.copyAllBtn.addEventListener('click', () => this.copyAllPasswords());
     this.elements.clearBtn.addEventListener('click', () => this.clearPasswords());
     
