@@ -490,7 +490,8 @@ class PasswordGenerator {
       capitalizeFirst = false,
       numberCount = 0,
       symbolCount = 0,
-      separator = ''
+      separator = '',
+      placement = 'end'
     } = options;
 
     const selectedWords = [];
@@ -511,10 +512,7 @@ class PasswordGenerator {
       }
     }
 
-    // Join words with separator
-    let password = selectedWords.join(separator);
-
-    // Build suffix: shuffled mix of requested numbers and symbols
+    // Build extras: shuffled mix of requested numbers and symbols
     const extras = [];
     for (let i = 0; i < numberCount; i++) extras.push(this.getRandomNumber());
     for (let i = 0; i < symbolCount; i++) extras.push(this.getRandomSymbol());
@@ -523,7 +521,21 @@ class PasswordGenerator {
       [extras[i], extras[j]] = [extras[j], extras[i]];
     }
 
-    return password + extras.join('');
+    if (placement === 'between' && extras.length > 0) {
+      // Distribute extras randomly across the gaps between words
+      const gapExtras = Array.from({ length: wordCount - 1 }, () => []);
+      for (const extra of extras) {
+        gapExtras[this.getRandomInt(wordCount - 1)].push(extra);
+      }
+      let password = selectedWords[0];
+      for (let i = 0; i < wordCount - 1; i++) {
+        password += gapExtras[i].join('') + separator + selectedWords[i + 1];
+      }
+      return password;
+    }
+
+    // Default: append extras as suffix
+    return selectedWords.join(separator) + extras.join('');
   }
 
   generateMultiple(count, wordCount = 4, options = {}) {
@@ -584,6 +596,8 @@ class PasswordGUI {
       capAll: document.getElementById('capAll'),
       numberCount: document.getElementById('numberCount'),
       symbolCount: document.getElementById('symbolCount'),
+      posEnd: document.getElementById('posEnd'),
+      posBetween: document.getElementById('posBetween'),
       showEntropy: document.getElementById('showEntropy'),
       generateBtn: document.getElementById('generateBtn'),
       passwordsContainer: document.getElementById('passwordsContainer'),
@@ -623,6 +637,7 @@ class PasswordGUI {
       capitalizeFirst: capValue === 'first',
       numberCount: parseInt(this.elements.numberCount.value),
       symbolCount: parseInt(this.elements.symbolCount.value),
+      placement: this.elements.posBetween.checked ? 'between' : 'end',
       showEntropy: this.elements.showEntropy.checked
     };
   }
@@ -645,7 +660,8 @@ class PasswordGUI {
           capitalizeFirst: options.capitalizeFirst,
           numberCount: options.numberCount,
           symbolCount: options.symbolCount,
-          separator: options.separator
+          separator: options.separator,
+          placement: options.placement
         }
       );
       

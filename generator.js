@@ -12,9 +12,10 @@ class PasswordGenerator {
    * @param {Object} options - Additional options
    * @param {boolean} options.capitalize - Whether to capitalize first letter of every word
    * @param {boolean} options.capitalizeFirst - Whether to capitalize only the first word
-   * @param {number} options.numberCount - How many random digits to append (0-9)
-   * @param {number} options.symbolCount - How many random symbols to append (0-9)
+   * @param {number} options.numberCount - How many random digits to include (0-9)
+   * @param {number} options.symbolCount - How many random symbols to include (0-9)
    * @param {string} options.separator - Character to separate words
+   * @param {string} options.placement - Where to place digits/symbols: 'end' (default) or 'between'
    * @returns {string} Generated password
    */
   generatePassword(wordCount = 4, options = {}) {
@@ -27,7 +28,8 @@ class PasswordGenerator {
       capitalizeFirst = false,
       numberCount = 0,
       symbolCount = 0,
-      separator = ''
+      separator = '',
+      placement = 'end'
     } = options;
 
     // Select random words
@@ -49,10 +51,7 @@ class PasswordGenerator {
       }
     }
 
-    // Join words with separator
-    let password = selectedWords.join(separator);
-
-    // Build suffix: shuffled mix of requested numbers and symbols
+    // Build extras: shuffled mix of requested numbers and symbols
     const extras = [];
     for (let i = 0; i < numberCount; i++) extras.push(this.getRandomNumber());
     for (let i = 0; i < symbolCount; i++) extras.push(this.getRandomSymbol());
@@ -61,7 +60,21 @@ class PasswordGenerator {
       [extras[i], extras[j]] = [extras[j], extras[i]];
     }
 
-    return password + extras.join('');
+    if (placement === 'between' && extras.length > 0) {
+      // Distribute extras randomly across the gaps between words
+      const gapExtras = Array.from({ length: wordCount - 1 }, () => []);
+      for (const extra of extras) {
+        gapExtras[crypto.randomInt(wordCount - 1)].push(extra);
+      }
+      let password = selectedWords[0];
+      for (let i = 0; i < wordCount - 1; i++) {
+        password += gapExtras[i].join('') + separator + selectedWords[i + 1];
+      }
+      return password;
+    }
+
+    // Default: append extras as suffix
+    return selectedWords.join(separator) + extras.join('');
   }
 
   /**

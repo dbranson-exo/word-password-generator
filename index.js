@@ -15,8 +15,9 @@ Options:
   -s, --separator <char>       Separator between words (default: none)
   --capitalize                 Capitalize first letter of every word
   --capitalize-first           Capitalize first letter of the first word only
-  --numbers <count>            Number of digits to append (default: 0)
-  --symbols <count>            Number of symbols to append (default: 0)
+  --numbers <count>            Number of digits to include (default: 0)
+  --symbols <count>            Number of symbols to include (default: 0)
+  --between                    Place digits/symbols between words instead of at the end
   --entropy                    Show entropy information
   -h, --help                   Show this help message
 
@@ -26,6 +27,7 @@ Examples:
   node index.js --capitalize-first --separator "-"      # Capitalize first word, use hyphens
   node index.js --numbers 2 --symbols 1 --entropy       # Append 2 digits + 1 symbol, show entropy
   node index.js --capitalize --numbers 3 --symbols 2    # All caps + 3 digits + 2 symbols
+  node index.js --numbers 2 --between                   # 2 digits placed between words
 `);
 }
 
@@ -39,6 +41,7 @@ function parseArgs() {
     capitalizeFirst: false,
     numberCount: 0,
     symbolCount: 0,
+    placement: 'end',
     entropy: false
   };
 
@@ -107,6 +110,10 @@ function parseArgs() {
         break;
       }
         
+      case '--between':
+        options.placement = 'between';
+        break;
+
       case '--entropy':
         options.entropy = true;
         break;
@@ -134,7 +141,8 @@ function main() {
         capitalizeFirst: options.capitalizeFirst,
         numberCount: options.numberCount,
         symbolCount: options.symbolCount,
-        separator: options.separator
+        separator: options.separator,
+        placement: options.placement
       }
     );
     

@@ -60,7 +60,7 @@
                 </div>
 
                 <div class="option-group">
-                    <label for="numberCount">Digits to append</label>
+                    <label for="numberCount">Digits</label>
                     <select id="numberCount">
                         <option value="0" selected>0</option>
                         <option value="1">1</option>
@@ -70,13 +70,27 @@
                 </div>
 
                 <div class="option-group">
-                    <label for="symbolCount">Symbols to append</label>
+                    <label for="symbolCount">Symbols</label>
                     <select id="symbolCount">
                         <option value="0" selected>0</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
                     </select>
+                </div>
+
+                <div class="option-group">
+                    <label>Digit/Symbol Placement</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="placement" value="end" id="posEnd" checked>
+                            <span>Append to End</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="placement" value="between" id="posBetween">
+                            <span>Between Words</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="option-group">
