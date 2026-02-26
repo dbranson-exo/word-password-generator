@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
 
   // Handle requests
   if (req.method === 'GET') {
-    const publicDir = path.join(__dirname, 'public');
+    const publicDir = __dirname;
     const requestedPath = req.url === '/' ? 'index.html' : req.url;
     let filePath = path.normalize(path.join(publicDir, requestedPath));
 
