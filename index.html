@@ -37,6 +37,16 @@
                 </div>
 
                 <div class="option-group">
+                    <label for="entropyRange">Required Entropy</label>
+                    <select id="entropyRange">
+                        <option value="any" selected>Any</option>
+                        <option value="60-80">60–80 bits</option>
+                        <option value="80-100">80–100 bits</option>
+                        <option value="100+">100+ bits</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
                     <label for="passwordCount">Number of Passwords</label>
                     <input type="number" id="passwordCount" min="1" max="20" value="1">
                 </div>
@@ -98,15 +108,6 @@
                     </div>
                 </div>
 
-                <div class="option-group">
-                    <div class="checkbox-group">
-                        <label class="checkbox-option">
-                            <input type="checkbox" id="showEntropy">
-                            <span>Show Entropy</span>
-                        </label>
-                    </div>
-                </div>
-
                 <button id="generateBtnBottom" class="generate-btn">
                     <span>🎲</span> Generate Passwords
                 </button>
@@ -149,6 +150,7 @@
         </footer>
     </div>
 
+    <script src="words.js"></script>
     <script src="script.js"></script>
     <script src="https://dbranson-exo.github.io/nav.js"></script>
 </body>
