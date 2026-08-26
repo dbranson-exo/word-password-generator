@@ -23,6 +23,33 @@
                 </button>
 
                 <div class="option-group">
+                    <label>Entropy Level</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="entropyLevel" value="custom" id="entropyCustom" checked>
+                            <span>Custom</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="entropyLevel" value="fair" id="entropyFair">
+                            <span>Fair (~36 bits)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="entropyLevel" value="good" id="entropyGood">
+                            <span>Good (~49 bits)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="entropyLevel" value="strong" id="entropyStrong">
+                            <span>Strong (~61 bits)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="entropyLevel" value="veryStrong" id="entropyVeryStrong">
+                            <span>Very Strong (~85 bits)</span>
+                        </label>
+                    </div>
+                    <p class="option-hint">Choosing a level sets Number of Words, Digits, and Symbols for you.</p>
+                </div>
+
+                <div class="option-group">
                     <label for="wordCount">Number of Words</label>
                     <div class="radio-group">
                         <label class="radio-option">
@@ -34,6 +61,7 @@
                             <span>4 Words</span>
                         </label>
                     </div>
+                    <p class="option-hint" id="wordCountHint" style="display: none;"></p>
                 </div>
 
                 <div class="option-group">
@@ -72,6 +100,7 @@
                         <option value="2">2</option>
                         <option value="3">3</option>
                     </select>
+                    <p class="option-hint" id="numberCountHint" style="display: none;"></p>
                 </div>
 
                 <div class="option-group">
@@ -82,6 +111,7 @@
                         <option value="2">2</option>
                         <option value="3">3</option>
                     </select>
+                    <p class="option-hint" id="symbolCountHint" style="display: none;"></p>
                 </div>
 
                 <div class="option-group">
@@ -149,6 +179,7 @@
         </footer>
     </div>
 
+    <script src="words.js"></script>
     <script src="script.js"></script>
     <script src="https://dbranson-exo.github.io/nav.js"></script>
 </body>
