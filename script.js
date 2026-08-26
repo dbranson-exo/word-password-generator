@@ -1,5 +1,3 @@
-
-// commonWords is defined in words.js, loaded before this file
 class PasswordGenerator {
   constructor() {
     this.words = commonWords.filter(w => w.length >= 3);
@@ -171,7 +169,6 @@ class PasswordGUI {
       symbolCount: document.getElementById('symbolCount'),
       posEnd: document.getElementById('posEnd'),
       posBetween: document.getElementById('posBetween'),
-      showEntropy: document.getElementById('showEntropy'),
       generateBtn: document.getElementById('generateBtn'),
       generateBtnBottom: document.getElementById('generateBtnBottom'),
       passwordsContainer: document.getElementById('passwordsContainer'),
@@ -179,6 +176,7 @@ class PasswordGUI {
       totalCount: document.getElementById('totalCount'),
       avgLength: document.getElementById('avgLength'),
       avgEntropy: document.getElementById('avgEntropy'),
+      entropyRange: document.getElementById('entropyRange'),
       copyAllBtn: document.getElementById('copyAllBtn'),
       clearBtn: document.getElementById('clearBtn')
     };
@@ -239,7 +237,7 @@ class PasswordGUI {
       numberCount: preset ? preset.numberCount : parseInt(this.elements.numberCount.value),
       symbolCount: preset ? preset.symbolCount : parseInt(this.elements.symbolCount.value),
       placement: this.elements.posBetween.checked ? 'between' : 'end',
-      showEntropy: this.elements.showEntropy.checked
+      entropyRange: this.elements.entropyRange.value
     };
   }
 
@@ -253,31 +251,43 @@ class PasswordGUI {
     }
 
     try {
-      this.currentPasswords = this.generator.generateMultiple(
-        options.count,
-        options.wordCount,
-        {
-          capitalize: options.capitalize,
-          capitalizeFirst: options.capitalizeFirst,
-          numberCount: options.numberCount,
-          symbolCount: options.symbolCount,
-          separator: options.separator,
-          placement: options.placement
-        }
-      );
-      // Every password in this batch used the same word/digit/symbol mix, so
-      // they all share the same estimated entropy.
-      this.currentEntropy = this.generator.calculateEntropy({
-        wordCount: options.wordCount,
+      const genOptions = {
+        capitalize: options.capitalize,
+        capitalizeFirst: options.capitalizeFirst,
         numberCount: options.numberCount,
-        symbolCount: options.symbolCount
-      });
+        symbolCount: options.symbolCount,
+        separator: options.separator,
+        placement: options.placement
+      };
 
-      this.displayPasswords(options.showEntropy);
+      const passwords = [];
+      const maxAttempts = 500;
+      for (let i = 0; i < options.count; i++) {
+        let pwd;
+        let attempts = 0;
+        do {
+          pwd = this.generator.generatePassword(options.wordCount, genOptions);
+          attempts++;
+        } while (options.entropyRange !== 'any' && !this.meetsEntropyRange(pwd, options.entropyRange) && attempts < maxAttempts);
+
+        if (options.entropyRange !== 'any' && !this.meetsEntropyRange(pwd, options.entropyRange)) {
+          this.showError(`Could not generate a password in the ${options.entropyRange} bits range with the current settings. Try adding more words, digits, or symbols.`);
+          return;
+        }
+
+
       this.updateStats();
     } catch (error) {
       this.showError(error.message);
     }
+  }
+
+  meetsEntropyRange(password, range) {
+    const { estimatedEntropy } = this.generator.calculateEntropy(password);
+    if (range === '60-80') return estimatedEntropy >= 60 && estimatedEntropy < 80;
+    if (range === '80-100') return estimatedEntropy >= 80 && estimatedEntropy < 100;
+    if (range === '100+') return estimatedEntropy >= 100;
+    return true;
   }
 
   displayPasswords(showEntropy) {
