@@ -107,13 +107,16 @@ class PasswordGenerator {
 }
 
 // Presets mapping a named entropy level to the word/digit/symbol mix that
-// guarantees it: each word contributes ~12.15 bits (log2 of the word list),
-// so word count alone is enough to floor the target entropy.
+// achieves it. Word count is the primary lever (~12.15 bits/word, log2 of
+// the word list, similar to a Diceware word). Targets are chosen so each
+// level clears a conventional reference point for resisting that class of
+// attacker (~40 bits: casual/short-lived, ~60: sustained offline attack,
+// ~80: well-resourced attacker, ~100+: long-term/nation-state).
 const ENTROPY_PRESETS = {
-  fair: { wordCount: 3, numberCount: 0, symbolCount: 0 },
-  good: { wordCount: 4, numberCount: 1, symbolCount: 0 },
-  strong: { wordCount: 5, numberCount: 1, symbolCount: 1 },
-  veryStrong: { wordCount: 7, numberCount: 2, symbolCount: 1 }
+  fair: { wordCount: 4, numberCount: 0, symbolCount: 0 },
+  good: { wordCount: 5, numberCount: 1, symbolCount: 0 },
+  strong: { wordCount: 7, numberCount: 1, symbolCount: 1 },
+  veryStrong: { wordCount: 9, numberCount: 1, symbolCount: 1 }
 };
 
 // GUI Controller
@@ -124,6 +127,31 @@ class PasswordGUI {
     this.activeEntropyLevel = 'custom';
     this.initializeElements();
     this.attachEventListeners();
+    this.initializeEntropyTiers();
+  }
+
+  // Derives the Weak/Fair/Good/Strong/Very Strong badge boundaries directly
+  // from ENTROPY_PRESETS (rather than separate hardcoded numbers) so a
+  // preset's own generated passwords always earn a badge matching its name,
+  // and fills in each radio's "(~N bits)" label with the real computed value.
+  initializeEntropyTiers() {
+    const levelNames = { fair: 'Fair', good: 'Good', strong: 'Strong', veryStrong: 'Very Strong' };
+    const levelClasses = { fair: 'entropy-medium', good: 'entropy-high', strong: 'entropy-very-high', veryStrong: 'entropy-max' };
+
+    this.entropyTiers = Object.entries(ENTROPY_PRESETS)
+      .map(([level, preset]) => ({
+        level,
+        label: levelNames[level],
+        className: levelClasses[level],
+        bits: this.generator.calculateEntropy(preset).estimatedEntropy
+      }))
+      .sort((a, b) => a.bits - b.bits);
+
+    this.entropyTiers.forEach(tier => {
+      const labelId = `entropy${tier.level.charAt(0).toUpperCase() + tier.level.slice(1)}Label`;
+      const span = document.getElementById(labelId);
+      if (span) span.textContent = `${tier.label} (~${Math.round(tier.bits)} bits)`;
+    });
   }
 
   initializeElements() {
@@ -300,21 +328,18 @@ class PasswordGUI {
   createEntropyIndicator(entropy) {
     const indicator = document.createElement('span');
     indicator.className = 'entropy-indicator';
-    
-    if (entropy < 40) {
+
+    // Highest tier whose floor the entropy clears; below every tier's floor is "Weak".
+    const matchedTier = this.entropyTiers.filter(tier => entropy >= tier.bits).pop();
+
+    if (matchedTier) {
+      indicator.classList.add(matchedTier.className);
+      indicator.textContent = matchedTier.label;
+    } else {
       indicator.classList.add('entropy-low');
       indicator.textContent = 'Weak';
-    } else if (entropy < 60) {
-      indicator.classList.add('entropy-medium');
-      indicator.textContent = 'Fair';
-    } else if (entropy < 80) {
-      indicator.classList.add('entropy-high');
-      indicator.textContent = 'Good';
-    } else {
-      indicator.classList.add('entropy-very-high');
-      indicator.textContent = 'Strong';
     }
-    
+
     return indicator;
   }
 

@@ -363,6 +363,11 @@ footer {
     color: #2563eb;
 }
 
+.entropy-max {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
 /* Scrollbar styling */
 .passwords-container::-webkit-scrollbar {
     width: 8px;
