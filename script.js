@@ -3,6 +3,7 @@
 class PasswordGenerator {
   constructor() {
     this.words = commonWords.filter(w => w.length >= 3);
+    this.symbols = '!@#$%^&*+=?';
   }
 
   getRandomInt(max) {
@@ -82,27 +83,25 @@ class PasswordGenerator {
   }
 
   getRandomSymbol() {
-    const symbols = '!@#$%^&*+=?';
-    return symbols[this.getRandomInt(symbols.length)];
+    return this.symbols[this.getRandomInt(this.symbols.length)];
   }
 
-  calculateEntropy(password) {
-    const wordCount = password.split(/[^a-zA-Z]/).filter(word => word.length > 0).length;
+  // Entropy from the actual random choices the generator made (which words,
+  // which digits, which symbols) rather than from the output string's
+  // character set — the latter assumes brute-force character guessing, which
+  // wildly overstates real entropy for a dictionary-word-based password.
+  calculateEntropy({ wordCount, numberCount = 0, symbolCount = 0 }) {
     const wordEntropy = Math.log2(this.words.length) * wordCount;
-    
-    let charSet = 26;
-    if (/[A-Z]/.test(password)) charSet += 26;
-    if (/[0-9]/.test(password)) charSet += 10;
-    if (/[^a-zA-Z0-9]/.test(password)) charSet += 10;
-    
-    const charEntropy = password.length * Math.log2(charSet);
-    
+    const numberEntropy = numberCount * Math.log2(10);
+    const symbolEntropy = symbolCount * Math.log2(this.symbols.length);
+    const estimatedEntropy = wordEntropy + numberEntropy + symbolEntropy;
+
     return {
       wordCount,
-      passwordLength: password.length,
       wordEntropy: Math.round(wordEntropy * 100) / 100,
-      charEntropy: Math.round(charEntropy * 100) / 100,
-      estimatedEntropy: Math.round(Math.max(wordEntropy, charEntropy) * 100) / 100
+      numberEntropy: Math.round(numberEntropy * 100) / 100,
+      symbolEntropy: Math.round(symbolEntropy * 100) / 100,
+      estimatedEntropy: Math.round(estimatedEntropy * 100) / 100
     };
   }
 }
@@ -238,7 +237,14 @@ class PasswordGUI {
           placement: options.placement
         }
       );
-      
+      // Every password in this batch used the same word/digit/symbol mix, so
+      // they all share the same estimated entropy.
+      this.currentEntropy = this.generator.calculateEntropy({
+        wordCount: options.wordCount,
+        numberCount: options.numberCount,
+        symbolCount: options.symbolCount
+      });
+
       this.displayPasswords(options.showEntropy);
       this.updateStats();
     } catch (error) {
@@ -262,12 +268,11 @@ class PasswordGUI {
       passwordMeta.className = 'password-meta';
 
       let metaInfo = `#${index + 1} • ${password.length} chars`;
-      
+
       if (showEntropy) {
-        const entropy = this.generator.calculateEntropy(password);
-        metaInfo += ` • ${entropy.estimatedEntropy} bits`;
-        
-        const entropyIndicator = this.createEntropyIndicator(entropy.estimatedEntropy);
+        metaInfo += ` • ${this.currentEntropy.estimatedEntropy} bits`;
+
+        const entropyIndicator = this.createEntropyIndicator(this.currentEntropy.estimatedEntropy);
         passwordMeta.appendChild(entropyIndicator);
       }
 
@@ -318,17 +323,10 @@ class PasswordGUI {
 
     const totalLength = this.currentPasswords.reduce((sum, pwd) => sum + pwd.length, 0);
     const avgLength = Math.round(totalLength / this.currentPasswords.length);
-    
-    let totalEntropy = 0;
-    this.currentPasswords.forEach(pwd => {
-      const entropy = this.generator.calculateEntropy(pwd);
-      totalEntropy += entropy.estimatedEntropy;
-    });
-    const avgEntropy = Math.round(totalEntropy / this.currentPasswords.length);
 
     this.elements.totalCount.textContent = this.currentPasswords.length;
     this.elements.avgLength.textContent = avgLength;
-    this.elements.avgEntropy.textContent = `${avgEntropy} bits`;
+    this.elements.avgEntropy.textContent = `${Math.round(this.currentEntropy.estimatedEntropy)} bits`;
     this.elements.stats.style.display = 'grid';
   }
 
