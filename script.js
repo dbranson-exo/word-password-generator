@@ -1,6 +1,7 @@
 class PasswordGenerator {
   constructor() {
     this.words = commonWords.filter(w => w.length >= 3);
+    this.symbols = '!@#$%^&*+=?';
   }
 
   getRandomInt(max) {
@@ -10,8 +11,8 @@ class PasswordGenerator {
   }
 
   generatePassword(wordCount = 4, options = {}) {
-    if (wordCount !== 3 && wordCount !== 4) {
-      throw new Error('Word count must be 3 or 4');
+    if (!Number.isInteger(wordCount) || wordCount < 3) {
+      throw new Error('Word count must be at least 3');
     }
 
     const {
@@ -80,42 +81,55 @@ class PasswordGenerator {
   }
 
   getRandomSymbol() {
-    const symbols = '!@#$%^&*+=?';
-    return symbols[this.getRandomInt(symbols.length)];
+    return this.symbols[this.getRandomInt(this.symbols.length)];
   }
 
-  calculateEntropy(password) {
-    const wordCount = password.split(/[^a-zA-Z]/).filter(word => word.length > 0).length;
+  // Entropy from the actual random choices the generator made (which words,
+  // which digits, which symbols) rather than from the output string's
+  // character set — the latter assumes brute-force character guessing, which
+  // wildly overstates real entropy for a dictionary-word-based password.
+  calculateEntropy({ wordCount, numberCount = 0, symbolCount = 0 }) {
     const wordEntropy = Math.log2(this.words.length) * wordCount;
-    
-    let charSet = 26;
-    if (/[A-Z]/.test(password)) charSet += 26;
-    if (/[0-9]/.test(password)) charSet += 10;
-    if (/[^a-zA-Z0-9]/.test(password)) charSet += 10;
-    
-    const charEntropy = password.length * Math.log2(charSet);
-    
+    const numberEntropy = numberCount * Math.log2(10);
+    const symbolEntropy = symbolCount * Math.log2(this.symbols.length);
+    const estimatedEntropy = wordEntropy + numberEntropy + symbolEntropy;
+
     return {
       wordCount,
-      passwordLength: password.length,
       wordEntropy: Math.round(wordEntropy * 100) / 100,
-      charEntropy: Math.round(charEntropy * 100) / 100,
-      estimatedEntropy: Math.round(Math.max(wordEntropy, charEntropy) * 100) / 100
+      numberEntropy: Math.round(numberEntropy * 100) / 100,
+      symbolEntropy: Math.round(symbolEntropy * 100) / 100,
+      estimatedEntropy: Math.round(estimatedEntropy * 100) / 100
     };
   }
 }
+
+// Presets mapping a named entropy level to the word/digit/symbol mix that
+// guarantees it: each word contributes ~12.15 bits (log2 of the word list),
+// so word count alone is enough to floor the target entropy.
+const ENTROPY_PRESETS = {
+  fair: { wordCount: 3, numberCount: 0, symbolCount: 0 },
+  good: { wordCount: 4, numberCount: 1, symbolCount: 0 },
+  strong: { wordCount: 5, numberCount: 1, symbolCount: 1 },
+  veryStrong: { wordCount: 7, numberCount: 2, symbolCount: 1 }
+};
 
 // GUI Controller
 class PasswordGUI {
   constructor() {
     this.generator = new PasswordGenerator();
     this.currentPasswords = [];
+    this.activeEntropyLevel = 'custom';
     this.initializeElements();
     this.attachEventListeners();
   }
 
   initializeElements() {
     this.elements = {
+      entropyLevels: Array.from(document.getElementsByName('entropyLevel')),
+      wordCountHint: document.getElementById('wordCountHint'),
+      numberCountHint: document.getElementById('numberCountHint'),
+      symbolCountHint: document.getElementById('symbolCountHint'),
       wordCount3: document.getElementById('words3'),
       wordCount4: document.getElementById('words4'),
       passwordCount: document.getElementById('passwordCount'),
@@ -145,7 +159,11 @@ class PasswordGUI {
     this.elements.generateBtnBottom.addEventListener('click', () => this.generatePasswords());
     this.elements.copyAllBtn.addEventListener('click', () => this.copyAllPasswords());
     this.elements.clearBtn.addEventListener('click', () => this.clearPasswords());
-    
+
+    this.elements.entropyLevels.forEach(radio => {
+      radio.addEventListener('change', () => this.applyEntropyLevel(radio.value));
+    });
+
     // Add enter key support for inputs
     this.elements.passwordCount.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') this.generatePasswords();
@@ -155,19 +173,41 @@ class PasswordGUI {
     });
   }
 
+  applyEntropyLevel(level) {
+    this.activeEntropyLevel = level;
+    const preset = ENTROPY_PRESETS[level];
+    const manualControlsDisabled = !!preset;
+
+    this.elements.wordCount3.disabled = manualControlsDisabled;
+    this.elements.wordCount4.disabled = manualControlsDisabled;
+    this.elements.numberCount.disabled = manualControlsDisabled;
+    this.elements.symbolCount.disabled = manualControlsDisabled;
+
+    [this.elements.wordCountHint, this.elements.numberCountHint, this.elements.symbolCountHint]
+      .forEach(hint => { hint.style.display = manualControlsDisabled ? 'block' : 'none'; });
+
+    if (preset) {
+      this.elements.wordCountHint.textContent = `Set to ${preset.wordCount} words by the ${level} entropy level.`;
+      this.elements.numberCountHint.textContent = `Set to ${preset.numberCount} by the ${level} entropy level.`;
+      this.elements.symbolCountHint.textContent = `Set to ${preset.symbolCount} by the ${level} entropy level.`;
+    }
+  }
+
   getOptions() {
     const capValue = this.elements.capFirst.checked ? 'first'
       : this.elements.capAll.checked ? 'all'
       : 'none';
 
+    const preset = ENTROPY_PRESETS[this.activeEntropyLevel];
+
     return {
-      wordCount: parseInt(this.elements.wordCount4.checked ? '4' : '3'),
+      wordCount: preset ? preset.wordCount : parseInt(this.elements.wordCount4.checked ? '4' : '3'),
       count: parseInt(this.elements.passwordCount.value),
       separator: this.elements.separator.value,
       capitalize: capValue === 'all',
       capitalizeFirst: capValue === 'first',
-      numberCount: parseInt(this.elements.numberCount.value),
-      symbolCount: parseInt(this.elements.symbolCount.value),
+      numberCount: preset ? preset.numberCount : parseInt(this.elements.numberCount.value),
+      symbolCount: preset ? preset.symbolCount : parseInt(this.elements.symbolCount.value),
       placement: this.elements.posBetween.checked ? 'between' : 'end',
       entropyRange: this.elements.entropyRange.value
     };
@@ -206,11 +246,8 @@ class PasswordGUI {
           this.showError(`Could not generate a password in the ${options.entropyRange} bits range with the current settings. Try adding more words, digits, or symbols.`);
           return;
         }
-        passwords.push(pwd);
-      }
 
-      this.currentPasswords = passwords;
-      this.displayPasswords(true);
+
       this.updateStats();
     } catch (error) {
       this.showError(error.message);
@@ -241,12 +278,11 @@ class PasswordGUI {
       passwordMeta.className = 'password-meta';
 
       let metaInfo = `#${index + 1} • ${password.length} chars`;
-      
+
       if (showEntropy) {
-        const entropy = this.generator.calculateEntropy(password);
-        metaInfo += ` • ${entropy.estimatedEntropy} bits`;
-        
-        const entropyIndicator = this.createEntropyIndicator(entropy.estimatedEntropy);
+        metaInfo += ` • ${this.currentEntropy.estimatedEntropy} bits`;
+
+        const entropyIndicator = this.createEntropyIndicator(this.currentEntropy.estimatedEntropy);
         passwordMeta.appendChild(entropyIndicator);
       }
 
@@ -297,17 +333,10 @@ class PasswordGUI {
 
     const totalLength = this.currentPasswords.reduce((sum, pwd) => sum + pwd.length, 0);
     const avgLength = Math.round(totalLength / this.currentPasswords.length);
-    
-    let totalEntropy = 0;
-    this.currentPasswords.forEach(pwd => {
-      const entropy = this.generator.calculateEntropy(pwd);
-      totalEntropy += entropy.estimatedEntropy;
-    });
-    const avgEntropy = Math.round(totalEntropy / this.currentPasswords.length);
 
     this.elements.totalCount.textContent = this.currentPasswords.length;
     this.elements.avgLength.textContent = avgLength;
-    this.elements.avgEntropy.textContent = `${avgEntropy} bits`;
+    this.elements.avgEntropy.textContent = `${Math.round(this.currentEntropy.estimatedEntropy)} bits`;
     this.elements.stats.style.display = 'grid';
   }
 

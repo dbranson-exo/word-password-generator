@@ -1,4 +1,5 @@
-// Common words for password generation (same as words.js)
+
+
 // Expanded dictionary with 4600+ words for maximum entropy and variety
 // Based on Google's 10,000 most common English words, filtered for memorability
 const commonWords = [
